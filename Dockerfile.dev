@@ -1,0 +1,68 @@
+# Arguments needed for versioning compatibility with current ESMFold packages
+ARG CUDA=11.3
+ARG PYTORCH=1.12.1
+# Pull image from online repository
+FROM pytorch/pytorch:${PYTORCH}-cuda${CUDA}-cudnn8-devel
+ARG CUDA
+ARG PYTORCH
+
+# Missing OS dependencies
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
+        wget \
+        git \
+        openssh-server \
+        unzip \
+        tar \
+        build-essential && \
+    CUDA_VERSION=$(echo $CUDA | tr '.' '-') && \
+    apt-get install --no-install-recommends -y cuda-command-line-tools-$CUDA_VERSION
+
+# Install conda 
+RUN wget -q -P /tmp \
+  https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh \
+    && bash /tmp/Miniconda3-latest-Linux-x86_64.sh -b -u /opt/conda \
+    && rm /tmp/Miniconda3-latest-Linux-x86_64.sh
+ENV PATH="/opt/conda/bin:$PATH"
+ENV LD_LIBRARY_PATH="/opt/conda/lib:$LD_LIBRARY_PATH"
+RUN conda update --all -y && \
+    conda update conda -y
+
+## Install mamba from conda-forge
+RUN conda install -y -c conda-forge \
+    mamba
+
+## Install mamba packages
+RUN mamba install -y -c conda-forge \
+    cudatoolkit==${CUDA}.* \
+    openbabel \
+    rdkit
+
+## pytorch packages
+RUN mamba install -y -c pytorch \
+    pytorch=$(echo $PYTORCH | cut -f1,2 -d.) 
+
+## Install pip packages
+COPY ./requirements.txt /app/
+RUN pip install --upgrade pip && \
+    pip install -r /app/requirements.txt
+
+## Install APBS-3.0.0
+RUN wget -q -P /tmp \
+  https://github.com/Electrostatics/apbs/releases/download/v3.0.0/APBS-3.0.0_Linux.zip \
+    && unzip /tmp/APBS-3.0.0_Linux.zip -d /opt \
+    && rm /tmp/APBS-3.0.0_Linux.zip
+ENV LD_LIBRARY_PATH="/opt/APBS-3.0.0.Linux/lib:$LD_LIBRARY_PATH"
+
+## Install pdb2pqr-2.1.1
+RUN wget -q -P /tmp \
+  https://github.com/Electrostatics/apbs-pdb2pqr/releases/download/vPDB2PQR-2.1.1/pdb2pqr-linux-bin64-2.1.1.tar.gz \
+    && tar -xvzf /tmp/pdb2pqr-linux-bin64-2.1.1.tar.gz -C /opt \
+    && rm /tmp/pdb2pqr-linux-bin64-2.1.1.tar.gz
+
+# Remote SSH Login for detached running
+WORKDIR /app
+RUN mkdir /var/run/sshd && \
+    echo 'root:password' | chpasswd && \
+    sed -i 's/\#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+CMD ["/usr/sbin/sshd", "-D"]

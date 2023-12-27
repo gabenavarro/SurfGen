@@ -1,7 +1,7 @@
 # :loudspeaker: SurfGen: Learning on Topological Surface and Geometric Structure for 3D Molecular Generation
 
 <div align=center>
-<img src="./assets/toc.png" width="50%" height="50%" alt="TOC" align=center />
+<img src="../assets/toc.png" width="50%" height="50%" alt="TOC" align=center />
 </div>
 
 
@@ -94,7 +94,7 @@ If the surface is generated, you will find the .ply file in the ./data/surf_make
 And we provide the generated surface file at ./data, namely 3cl_pocket_8.0_res_1.5.ply for further generation. 
 
 <div align=center>
-<img src="./assets/surface.png" width="50%" height="50%" alt="TOC" align=center />
+<img src="../assets/surface.png" width="50%" height="50%" alt="TOC" align=center />
 </div>
 
 
@@ -110,7 +110,7 @@ python gen.py --outdir example --check_point ./ckpt/val_119.pt --ply_file ./exam
 ```
 
 <div align=center>
-<img src="./assets/3cl_gen.png" width="50%" height="50%" alt="TOC" align=center />
+<img src="../assets/3cl_gen.png" width="50%" height="50%" alt="TOC" align=center />
 </div>
 
 
